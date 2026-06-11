@@ -1,0 +1,391 @@
+﻿import 'package:flutter/material.dart';
+import '../services/api_service.dart';
+import 'manage_users_screen.dart';
+import 'manage_classes_screen.dart';
+import 'manage_subjects_screen.dart';
+import 'manage_teachers_screen.dart';
+import 'manage_students_screen.dart';
+import 'reports_screen.dart';
+import 'assign_teacher_screen.dart';
+import 'enroll_student_screen.dart';
+import 'login_screen.dart';
+import 'admin_attendance_view.dart';
+import 'admin_results_view.dart';
+
+class AdminDashboard extends StatefulWidget {
+  const AdminDashboard({super.key});
+
+  @override
+  State<AdminDashboard> createState() => _AdminDashboardState();
+}
+
+class _AdminDashboardState extends State<AdminDashboard> {
+  Map<String, dynamic> stats = {};
+  bool isLoading = true;
+  Map<String, dynamic>? userSession;
+  String userName = '';
+  int _selectedIndex = 0;
+
+  final List<String> _tabs = [
+    'Dashboard',
+    'Users',
+    'Teachers',
+    'Students',
+    'Classes',
+    'Subjects',
+    'Attendance',
+    'Results',
+    'Reports',
+    'Assign',
+    'Enroll'
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    loadData();
+  }
+
+  Future<void> loadData() async {
+    setState(() => isLoading = true);
+
+    userSession = await ApiService.getUserSession();
+    userName = userSession?['name'] ??
+        userSession?['email']?.split('@').first ??
+        'Admin';
+
+    final statsResult = await ApiService.getDashboardStats();
+
+    setState(() {
+      if (statsResult['success'] == true && statsResult['stats'] != null) {
+        stats = statsResult['stats'];
+      } else {
+        stats = {
+          'total_students': 0,
+          'total_teachers': 0,
+          'total_classes': 0,
+          'total_subjects': 0
+        };
+      }
+      isLoading = false;
+    });
+  }
+
+  Future<void> logout() async {
+    bool? confirm = await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Logout'),
+        content: const Text('Are you sure you want to logout?'),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancel')),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('Logout'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      await ApiService.clearUserSession();
+      if (mounted) {
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const LoginScreen()),
+          (route) => false,
+        );
+      }
+    }
+  }
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(_tabs[_selectedIndex],
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+        backgroundColor: Colors.green.shade700,
+        elevation: 0,
+        actions: [
+          Container(
+            margin: const EdgeInsets.only(right: 8),
+            child: IconButton(
+              icon: const Icon(Icons.refresh, color: Colors.white, size: 22),
+              onPressed: loadData,
+              tooltip: "Refresh",
+              style: IconButton.styleFrom(
+                backgroundColor: Colors.white24,
+                padding: const EdgeInsets.all(8),
+              ),
+            ),
+          ),
+          Container(
+            margin: const EdgeInsets.only(right: 4),
+            child: IconButton(
+              icon: const Icon(Icons.logout, color: Colors.white, size: 22),
+              onPressed: logout,
+              tooltip: "Logout",
+              style: IconButton.styleFrom(
+                backgroundColor: Colors.white24,
+                padding: const EdgeInsets.all(8),
+              ),
+            ),
+          ),
+        ],
+      ),
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _getBody(),
+      bottomNavigationBar: BottomNavigationBar(
+        type: BottomNavigationBarType.fixed,
+        currentIndex: _selectedIndex,
+        onTap: _onItemTapped,
+        selectedItemColor: Colors.green.shade700,
+        unselectedItemColor: Colors.grey,
+        selectedLabelStyle: const TextStyle(fontSize: 9),
+        unselectedLabelStyle: const TextStyle(fontSize: 9),
+        items: const [
+          BottomNavigationBarItem(
+              icon: Icon(Icons.dashboard, size: 18), label: 'Dashboard'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.people, size: 18), label: 'Users'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.person, size: 18), label: 'Teachers'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.school, size: 18), label: 'Students'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.class_, size: 18), label: 'Classes'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.book, size: 18), label: 'Subjects'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.calendar_today, size: 18), label: 'Attendance'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.assessment, size: 18), label: 'Results'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.bar_chart, size: 18), label: 'Reports'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.assignment, size: 18), label: 'Assign'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.people_outline, size: 18), label: 'Enroll'),
+        ],
+      ),
+    );
+  }
+
+  Widget _getBody() {
+    switch (_selectedIndex) {
+      case 0:
+        return _buildDashboard();
+      case 1:
+        return const ManageUsersScreen();
+      case 2:
+        return const ManageTeachersScreen();
+      case 3:
+        return const ManageStudentsScreen();
+      case 4:
+        return const ManageClassesScreen();
+      case 5:
+        return const ManageSubjectsScreen();
+      case 6:
+        return const AdminAttendanceView();
+      case 7:
+        return const AdminResultsView();
+      case 8:
+        return const ReportsScreen();
+      case 9:
+        return const AssignTeacherScreen();
+      case 10:
+        return const EnrollStudentScreen();
+      default:
+        return _buildDashboard();
+    }
+  }
+
+  Widget _buildDashboard() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Colors.green.shade700, Colors.green.shade900],
+              ),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Row(
+              children: [
+                const CircleAvatar(
+                  radius: 20,
+                  backgroundColor: Colors.white,
+                  child: Icon(Icons.person, size: 22, color: Colors.green),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('Welcome',
+                          style:
+                              TextStyle(color: Colors.white70, fontSize: 10)),
+                      Text(
+                        userName,
+                        style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.white24,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Text('Admin',
+                      style: TextStyle(color: Colors.white, fontSize: 10)),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                  child: _buildCompactStatCard(stats['total_students'] ?? 0,
+                      'Students', Icons.people, Colors.green)),
+              const SizedBox(width: 8),
+              Expanded(
+                  child: _buildCompactStatCard(stats['total_teachers'] ?? 0,
+                      'Teachers', Icons.person, Colors.orange)),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                  child: _buildCompactStatCard(stats['total_classes'] ?? 0,
+                      'Classes', Icons.class_, Colors.purple)),
+              const SizedBox(width: 8),
+              Expanded(
+                  child: _buildCompactStatCard(stats['total_subjects'] ?? 0,
+                      'Subjects', Icons.book, Colors.blue)),
+            ],
+          ),
+          const SizedBox(height: 16),
+          const Text('Quick Actions',
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 10),
+          GridView.count(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            crossAxisCount: 3,
+            mainAxisSpacing: 8,
+            crossAxisSpacing: 8,
+            childAspectRatio: 1.0,
+            children: [
+              _buildQuickActionCard(
+                  Icons.person_add, 'Add User', Colors.green, 1),
+              _buildQuickActionCard(
+                  Icons.person, 'Add Teacher', Colors.orange, 2),
+              _buildQuickActionCard(
+                  Icons.school, 'Add Student', Colors.blue, 3),
+              _buildQuickActionCard(
+                  Icons.class_, 'Add Class', Colors.purple, 4),
+              _buildQuickActionCard(Icons.book, 'Add Subject', Colors.teal, 5),
+              _buildQuickActionCard(
+                  Icons.calendar_today, 'Attendance', Colors.orange, 6),
+              _buildQuickActionCard(Icons.assessment, 'Results', Colors.red, 7),
+              _buildQuickActionCard(
+                  Icons.assignment, 'Assign Teacher', Colors.brown, 9),
+              _buildQuickActionCard(Icons.people_outline, 'Enroll Student',
+                  Colors.deepPurple, 10),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCompactStatCard(
+      int count, String title, IconData icon, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+        boxShadow: [
+          BoxShadow(
+              color: Colors.grey.withOpacity(0.1),
+              blurRadius: 4,
+              offset: const Offset(0, 2)),
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+                color: color.withOpacity(0.1), shape: BoxShape.circle),
+            child: Icon(icon, size: 22, color: color),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(count.toString(),
+                  style: TextStyle(
+                      fontSize: 18, fontWeight: FontWeight.bold, color: color)),
+              Text(title,
+                  style: const TextStyle(fontSize: 10, color: Colors.grey)),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQuickActionCard(
+      IconData icon, String title, Color color, int index) {
+    return Card(
+      elevation: 1,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(8),
+        onTap: () => setState(() => _selectedIndex = index),
+        child: Container(
+          padding: const EdgeInsets.all(6),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: 24, color: color),
+              const SizedBox(height: 4),
+              Text(title,
+                  style:
+                      const TextStyle(fontSize: 9, fontWeight: FontWeight.w500),
+                  textAlign: TextAlign.center),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
