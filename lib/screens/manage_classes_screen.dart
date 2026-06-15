@@ -1,5 +1,4 @@
 ﻿import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import '../services/api_service.dart';
 
 class ManageClassesScreen extends StatefulWidget {

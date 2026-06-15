@@ -248,12 +248,14 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
               : _currentIndex == 1
                   ? _buildMyClassesTab()
                   : _currentIndex == 2
-                      ? TeacherAttendanceView(teacherClasses: teacherClasses)
+                      ? _buildAttendanceTab()
                       : _currentIndex == 3
                           ? const EnterMarksScreen()
                           : _currentIndex == 4
-                              ? TeacherAttendanceView(teacherClasses: teacherClasses)
-                              : TeacherMarksView(teacherClasses: teacherClasses),
+                              ? TeacherAttendanceView(
+                                  teacherClasses: teacherClasses)
+                              : TeacherMarksView(
+                                  teacherClasses: teacherClasses),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         onTap: (index) => setState(() => _currentIndex = index),
@@ -403,5 +405,10 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
         ],
       ),
     );
+  }
+
+  Widget _buildAttendanceTab() {
+    // Simplified attendance tab
+    return const Center(child: Text('Attendance feature coming soon'));
   }
 }

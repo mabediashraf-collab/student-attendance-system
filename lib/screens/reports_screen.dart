@@ -106,8 +106,9 @@ class _ReportsScreenState extends State<ReportsScreen> {
     List<String> params = [];
     if (selectedClassId != null) params.add('class_id=$selectedClassId');
     if (selectedTeacherId != null) params.add('teacher_id=$selectedTeacherId');
-    if (selectedDate != null && selectedDate!.isNotEmpty)
+    if (selectedDate != null && selectedDate!.isNotEmpty) {
       params.add('date=$selectedDate');
+    }
     url += params.join('&');
 
     final response = await http.get(Uri.parse(url));

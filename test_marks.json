@@ -1,0 +1,12 @@
+{
+    "subject_id": 25,
+    "class_id": 36,
+    "term": 1,
+    "exam_type": "MOT",
+    "marks": [
+        {"student_id": 32, "percentage": 74},
+        {"student_id": 33, "percentage": 68},
+        {"student_id": 34, "percentage": 71},
+        {"student_id": 35, "percentage": 65}
+    ]
+}

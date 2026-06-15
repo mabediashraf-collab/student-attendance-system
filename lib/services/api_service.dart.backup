@@ -1,4 +1,4 @@
-﻿import 'dart:convert';
+import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../config/app_config.dart';
@@ -135,7 +135,7 @@ class ApiService {
       final response = await http.post(
         Uri.parse('$baseUrl/users/add_teacher.php'),
         body: {
-          'full_name': data['full_name'],
+          'name': data['name'],
           'email': data['email'],
           'password': data['password'],
           'staff_no': data['staff_no'] ?? '',
@@ -691,48 +691,61 @@ class ApiService {
     }
   }
 
-  static Future<Map<String, dynamic>> getTeacherSubjects(int teacherId) async {
+  static Future<Map<String, dynamic>> getStudentsWithWarnings(int teacherId, int? classId) async {
     try {
-      print('Getting subjects for teacher ID: $teacherId');
-      final url = '$baseUrl/subjects/get_teacher_subjects.php?teacher_id=$teacherId';
-      print('Request URL: $url');
-      final response = await http.get(Uri.parse(url));
-      print('Subjects response status: ${response.statusCode}');
-      print('Subjects response body: ${response.body}');
-      return jsonDecode(response.body);
-    } catch (e) {
-      print('Get teacher subjects error: $e');
-      return {'success': false, 'subjects': []};
-    }
-  }
-
-  static Future<Map<String, dynamic>> getTeacherMarks(int teacherId, {int? classId, int? subjectId, int term = 1}) async {
-    try {
-      String url = '$baseUrl/marks/get_teacher_marks.php?teacher_id=$teacherId&term=$term';
+      String url = '$baseUrl/attendance/check_and_warn.php?teacher_id=$teacherId';
       if (classId != null) {
         url += '&class_id=$classId';
       }
-      if (subjectId != null) {
-        url += '&subject_id=$subjectId';
-      }
       final response = await http.get(Uri.parse(url));
       return jsonDecode(response.body);
     } catch (e) {
-      print('Get teacher marks error: $e');
-      return {'success': false, 'marks': []};
+      print('Get students with warnings error: $e');
+      return {'success': false, 'students': []};
     }
   }
 
+  static Future<Map<String, dynamic>> sendWarning(int studentId, int teacherId, String message, String warningType) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/attendance/send_warning.php'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'student_id': studentId,
+          'teacher_id': teacherId,
+          'message': message,
+          'warning_type': warningType,
+        }),
+      );
+      return jsonDecode(response.body);
+    } catch (e) {
+      print('Send warning error: $e');
+      return {'success': false, 'message': 'Error: $e'};
+    }
+  }
+
+  static Future<Map<String, dynamic>> getStudentCalculatedResults(int studentId, int term) async {
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/marks/calculate_results.php?student_id=$studentId&term=$term'));
+      print('Calculated results response status: ${response.statusCode}');
+      print('Calculated results response body: ${response.body}');
+      final Map<String, dynamic> data = jsonDecode(response.body);
+      return data;
+    } catch (e) {
+      print('Get student calculated results error: $e');
+      return {'success': false, 'message': 'Error: $e'};
+    }
+  }
   static Future<Map<String, dynamic>> getStudentsWithWarningsAdmin({int? classId, int threshold = 8}) async {
     try {
-      String url = '$baseUrl/attendance/get_students_for_warning.php?threshold=$threshold';
+      String url = '/attendance/get_students_for_warning.php?threshold=';
       if (classId != null) {
-        url += '&class_id=$classId';
+        url += '&class_id=';
       }
       final response = await http.get(Uri.parse(url));
       return jsonDecode(response.body);
     } catch (e) {
-      print('Get students for warning error: $e');
+      print('Get students for warning error: \');
       return {'success': false, 'students': []};
     }
   }
@@ -743,7 +756,7 @@ class ApiService {
       final adminId = prefs.getInt('user_id') ?? 1;
       
       final response = await http.post(
-        Uri.parse('$baseUrl/attendance/send_warning_admin.php'),
+        Uri.parse('/attendance/send_warning_admin.php'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'student_id': studentId,
@@ -754,63 +767,43 @@ class ApiService {
       );
       return jsonDecode(response.body);
     } catch (e) {
-      print('Send warning admin error: $e');
-      return {'success': false, 'message': 'Error: $e'};
+      print('Send warning admin error: \');
+      return {'success': false, 'message': 'Error: \'};
     }
   }
-
-  static Future<Map<String, dynamic>> getStudentCalculatedResults(int studentId, int term) async {
+  static Future<Map<String, dynamic>> getStudentsWithWarningsAdmin({int? classId, int threshold = 8}) async {
     try {
-      final response = await http.get(Uri.parse('$baseUrl/marks/calculate_results.php?student_id=$studentId&term=$term'));
+      String url = '/attendance/get_students_for_warning.php?threshold=';
+      if (classId != null) {
+        url += '&class_id=';
+      }
+      final response = await http.get(Uri.parse(url));
       return jsonDecode(response.body);
     } catch (e) {
-      print('Get student calculated results error: $e');
-      return {'success': false, 'results': []};
+      print('Get students for warning error: \');
+      return {'success': false, 'students': []};
     }
   }
 
-  // Grading System Methods
-  static Future<Map<String, dynamic>> getGradingSystem() async {
+  static Future<Map<String, dynamic>> sendWarningAdmin({required int studentId, required String message, required String warningType}) async {
     try {
-      final response = await http.get(Uri.parse('$baseUrl/grading/get_grades.php'));
-      return jsonDecode(response.body);
-    } catch (e) {
-      print('Get grading system error: $e');
-      return {'success': false, 'grades': []};
-    }
-  }
-
-  static Future<Map<String, dynamic>> addGrade(String gradeName, double minScore, double maxScore, String remarks) async {
-    try {
+      final prefs = await SharedPreferences.getInstance();
+      final adminId = prefs.getInt('user_id') ?? 1;
+      
       final response = await http.post(
-        Uri.parse('$baseUrl/grading/add_grade.php'),
+        Uri.parse('/attendance/send_warning_admin.php'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          'grade_name': gradeName,
-          'min_score': minScore,
-          'max_score': maxScore,
-          'remarks': remarks,
+          'student_id': studentId,
+          'admin_id': adminId,
+          'message': message,
+          'warning_type': warningType,
         }),
       );
       return jsonDecode(response.body);
     } catch (e) {
-      print('Add grade error: $e');
-      return {'success': false, 'message': 'Error: $e'};
-    }
-  }
-
-  static Future<Map<String, dynamic>> deleteGrade(int gradeId) async {
-    try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/grading/delete_grade.php'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'grade_id': gradeId}),
-      );
-      return jsonDecode(response.body);
-    } catch (e) {
-      print('Delete grade error: $e');
-      return {'success': false, 'message': 'Error: $e'};
+      print('Send warning admin error: \');
+      return {'success': false, 'message': 'Error: \'};
     }
   }
 }
-

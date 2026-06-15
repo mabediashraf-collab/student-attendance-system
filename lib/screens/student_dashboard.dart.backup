@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -42,8 +42,9 @@ class _StudentDashboardState extends State<StudentDashboard> {
         return;
       }
 
-      final response = await http.get(Uri.parse(
-          'http://localhost/sms_api/get_student_subjects.php?student_id=$userId'));
+      final response = await http.get(
+        Uri.parse('http://localhost/sms_api/get_student_subjects.php?student_id=$userId')
+      );
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         if (data['success'] == true) {
@@ -81,8 +82,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
         });
       }
 
-      final resultsResult =
-          await ApiService.getStudentCalculatedResults(userId, 1);
+      final resultsResult = await ApiService.getStudentCalculatedResults(userId, 1);
       if (resultsResult['success'] == true) {
         final subjects = resultsResult['subjects'] ?? [];
         List<dynamic> allMarks = [];
@@ -112,12 +112,8 @@ class _StudentDashboardState extends State<StudentDashboard> {
         title: const Text('Logout'),
         content: const Text('Are you sure you want to logout?'),
         actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('Cancel')),
-          TextButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: const Text('Logout')),
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Logout')),
         ],
       ),
     );
@@ -134,8 +130,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(_tabs[_currentIndex],
-            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+        title: Text(_tabs[_currentIndex], style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
         backgroundColor: Colors.green.shade700,
         centerTitle: true,
         actions: [
@@ -165,8 +160,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
         unselectedItemColor: Colors.grey,
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.calendar_today), label: 'Attendance'),
+          BottomNavigationBarItem(icon: Icon(Icons.calendar_today), label: 'Attendance'),
           BottomNavigationBarItem(icon: Icon(Icons.grade), label: 'Results'),
         ],
       ),
@@ -180,7 +174,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
 
     String firstName = studentData!['first_name'] ?? '';
     String lastName = studentData!['last_name'] ?? '';
-    String fullName = ('$firstName $lastName').trim();
+    String fullName = (firstName + ' ' + lastName).trim();
     String firstLetter = fullName.isNotEmpty ? fullName[0].toUpperCase() : '?';
     String photo = studentData!['photo'] ?? '';
     String email = studentData!['email'] ?? '';
@@ -198,8 +192,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
         children: [
           Card(
             elevation: 4,
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
             child: Padding(
               padding: const EdgeInsets.all(20),
               child: Column(
@@ -211,24 +204,16 @@ class _StudentDashboardState extends State<StudentDashboard> {
                         ? NetworkImage(ImageHelper.getFullImageUrl(photo))
                         : null,
                     child: photo.isEmpty
-                        ? Text(firstLetter,
-                            style: const TextStyle(
-                                fontSize: 48, fontWeight: FontWeight.bold))
+                        ? Text(firstLetter, style: const TextStyle(fontSize: 48, fontWeight: FontWeight.bold))
                         : null,
                   ),
                   const SizedBox(height: 16),
-                  Text(fullName,
-                      style: const TextStyle(
-                          fontSize: 24, fontWeight: FontWeight.bold)),
+                  Text(fullName, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 4),
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                    decoration: BoxDecoration(
-                        color: Colors.green.shade100,
-                        borderRadius: BorderRadius.circular(20)),
-                    child: Text(
-                        myClass.isNotEmpty ? myClass : '$className $stream'),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    decoration: BoxDecoration(color: Colors.green.shade100, borderRadius: BorderRadius.circular(20)),
+                    child: Text(myClass.isNotEmpty ? myClass : '$className $stream'),
                   ),
                 ],
               ),
@@ -242,15 +227,11 @@ class _StudentDashboardState extends State<StudentDashboard> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Personal Information',
-                      style:
-                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const Text('Personal Information', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   const Divider(),
                   _buildInfoRow(Icons.email, 'Email', email),
-                  _buildInfoRow(Icons.phone, 'Phone',
-                      phone.isNotEmpty ? phone : 'Not provided'),
-                  _buildInfoRow(Icons.home, 'Address',
-                      address.isNotEmpty ? address : 'Not provided'),
+                  _buildInfoRow(Icons.phone, 'Phone', phone.isNotEmpty ? phone : 'Not provided'),
+                  _buildInfoRow(Icons.home, 'Address', address.isNotEmpty ? address : 'Not provided'),
                 ],
               ),
             ),
@@ -263,9 +244,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Academic Information',
-                      style:
-                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const Text('Academic Information', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   const Divider(),
                   _buildInfoRow(Icons.numbers, 'Admission Number', admissionNo),
                   _buildInfoRow(Icons.school, 'Class', '$className $stream'),
@@ -281,14 +260,10 @@ class _StudentDashboardState extends State<StudentDashboard> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Parent/Guardian Information',
-                      style:
-                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const Text('Parent/Guardian Information', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   const Divider(),
-                  _buildInfoRow(Icons.person, 'Parent Name',
-                      parentName.isNotEmpty ? parentName : 'Not provided'),
-                  _buildInfoRow(Icons.phone, 'Parent Phone',
-                      parentPhone.isNotEmpty ? parentPhone : 'Not provided'),
+                  _buildInfoRow(Icons.person, 'Parent Name', parentName.isNotEmpty ? parentName : 'Not provided'),
+                  _buildInfoRow(Icons.phone, 'Parent Phone', parentPhone.isNotEmpty ? parentPhone : 'Not provided'),
                 ],
               ),
             ),
@@ -301,9 +276,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('My Subjects',
-                      style:
-                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const Text('My Subjects', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   const Divider(),
                   if (loadingSubjects)
                     const Center(child: CircularProgressIndicator())
@@ -311,10 +284,10 @@ class _StudentDashboardState extends State<StudentDashboard> {
                     const Text('No subjects found')
                   else
                     ...mySubjects.map((subject) => ListTile(
-                          leading: const Icon(Icons.book, size: 20),
-                          title: Text(subject['subject_name']),
-                          dense: true,
-                        )),
+                      leading: const Icon(Icons.book, size: 20),
+                      title: Text(subject['subject_name']),
+                      dense: true,
+                    )),
                 ],
               ),
             ),
@@ -354,8 +327,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
             subtitle: Text('Session: ${record['session'] ?? 'Morning'}'),
             trailing: Chip(
               label: Text(record['status']?.toUpperCase() ?? 'ABSENT'),
-              backgroundColor:
-                  record['status'] == 'present' ? Colors.green : Colors.red,
+              backgroundColor: record['status'] == 'present' ? Colors.green : Colors.red,
             ),
           ),
         );
@@ -381,9 +353,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
           child: ListTile(
             leading: CircleAvatar(
               backgroundColor: gradeColor.withOpacity(0.2),
-              child: Text((result['subject_code']?.length ?? 0) >= 2
-                  ? result['subject_code'].substring(0, 2)
-                  : (result['subject_code'] ?? "??") ?? '?'),
+              child: Text(result['subject_code']?.substring(0, 2) ?? '?'),
             ),
             title: Text(result['subject_name'] ?? 'Unknown'),
             subtitle: Text('Term ${result['term'] ?? 1}'),
@@ -392,13 +362,9 @@ class _StudentDashboardState extends State<StudentDashboard> {
               children: [
                 Text('${percentage.toStringAsFixed(1)}%'),
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                  decoration: BoxDecoration(
-                      color: gradeColor,
-                      borderRadius: BorderRadius.circular(12)),
-                  child:
-                      Text(grade, style: const TextStyle(color: Colors.white)),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(color: gradeColor, borderRadius: BorderRadius.circular(12)),
+                  child: Text(grade, style: const TextStyle(color: Colors.white)),
                 ),
               ],
             ),
@@ -424,3 +390,4 @@ class _StudentDashboardState extends State<StudentDashboard> {
     return Colors.red;
   }
 }
+

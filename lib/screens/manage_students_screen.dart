@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'dart:convert';
-import 'package:image_picker/image_picker.dart';
-import 'dart:io';
 import '../services/api_service.dart';
 
 class ManageStudentsScreen extends StatefulWidget {

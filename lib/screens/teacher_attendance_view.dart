@@ -3,7 +3,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../services/api_service.dart';
 
 class TeacherAttendanceView extends StatefulWidget {
-  const TeacherAttendanceView({super.key});
+  final List teacherClasses;
+
+  const TeacherAttendanceView({super.key, this.teacherClasses = const []});
 
   @override
   State<TeacherAttendanceView> createState() => _TeacherAttendanceViewState();
@@ -16,13 +18,17 @@ class _TeacherAttendanceViewState extends State<TeacherAttendanceView> {
 
   int? selectedClassId;
   String? selectedDate;
-  List classes = [];
 
   @override
   void initState() {
     super.initState();
+    print(
+        "TeacherAttendanceView init - Received ${widget.teacherClasses.length} classes");
+    for (var cls in widget.teacherClasses) {
+      print(
+          "Class: ${cls['class_name']} ${cls['stream']} - ID: ${cls['class_id']}");
+    }
     _loadData();
-    _loadClasses();
   }
 
   Future<void> _loadData() async {
@@ -45,27 +51,12 @@ class _TeacherAttendanceViewState extends State<TeacherAttendanceView> {
     setState(() => isLoading = false);
   }
 
-  Future<void> _loadClasses() async {
-    final result = await ApiService.getClasses();
-    if (result['success'] == true) {
-      List rawClasses = result['classes'] ?? [];
-      setState(() {
-        classes = rawClasses.map((cls) {
-          return {
-            'class_id': cls['class_id'] is int
-                ? cls['class_id']
-                : int.parse(cls['class_id'].toString()),
-            'class_name': cls['class_name']?.toString() ?? '',
-            'stream': cls['stream']?.toString() ?? ''
-          };
-        }).toList();
-      });
-    }
-  }
-
   Future<void> _loadAttendanceRecords() async {
     final prefs = await SharedPreferences.getInstance();
     final teacherId = prefs.getInt('user_id');
+
+    print(
+        "Loading attendance - Teacher: $teacherId, Class: $selectedClassId, Date: $selectedDate");
 
     final result = await ApiService.getAttendanceRecords(
       teacherId: teacherId,
@@ -77,10 +68,14 @@ class _TeacherAttendanceViewState extends State<TeacherAttendanceView> {
       setState(() {
         attendanceRecords = result['attendance'] ?? [];
       });
+      print("Loaded ${attendanceRecords.length} records");
+    } else {
+      print("Failed to load: ${result['message']}");
     }
   }
 
   void _applyFilters() {
+    print("Applying filters - Class: $selectedClassId, Date: $selectedDate");
     _loadAttendanceRecords();
   }
 
@@ -129,14 +124,52 @@ class _TeacherAttendanceViewState extends State<TeacherAttendanceView> {
               padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: widget.teacherClasses.isEmpty
+                          ? Colors.red.shade50
+                          : Colors.green.shade50,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          widget.teacherClasses.isEmpty
+                              ? Icons.warning
+                              : Icons.check_circle,
+                          color: widget.teacherClasses.isEmpty
+                              ? Colors.red
+                              : Colors.green,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          widget.teacherClasses.isEmpty
+                              ? "No classes assigned to you"
+                              : "You have ${widget.teacherClasses.length} class(es) assigned",
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: widget.teacherClasses.isEmpty
+                                ? Colors.red
+                                : Colors.green,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
                   DropdownButtonFormField<int>(
                     initialValue: selectedClassId,
-                    decoration:
-                        const InputDecoration(labelText: 'Filter by Class'),
+                    decoration: const InputDecoration(
+                      labelText: 'Filter by Class',
+                      border: OutlineInputBorder(),
+                    ),
                     items: [
                       const DropdownMenuItem(
                           value: null, child: Text('All Classes')),
-                      ...classes.map((cls) {
+                      ...widget.teacherClasses.map((cls) {
                         return DropdownMenuItem<int>(
                           value: cls['class_id'],
                           child: Text('${cls['class_name']} ${cls['stream']}'),
@@ -144,7 +177,10 @@ class _TeacherAttendanceViewState extends State<TeacherAttendanceView> {
                       }),
                     ],
                     onChanged: (value) {
-                      setState(() => selectedClassId = value);
+                      print("Class dropdown changed to: $value");
+                      setState(() {
+                        selectedClassId = value;
+                      });
                     },
                   ),
                   const SizedBox(height: 12),
@@ -201,7 +237,7 @@ class _TeacherAttendanceViewState extends State<TeacherAttendanceView> {
                   SizedBox(height: 50),
                   Icon(Icons.history, size: 80, color: Colors.grey),
                   SizedBox(height: 16),
-                  Text('No attendance records found'),
+                  Text('No attendance records found for the selected filters'),
                 ],
               ),
             )
