@@ -394,7 +394,7 @@ class ApiService {
       });
       
       final response = await http.post(
-        Uri.parse('$baseUrl/marks/save_marks.php'),
+        Uri.parse('$baseUrl/proxy_save_marks.php'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'class_id': classId,
@@ -813,6 +813,10 @@ class ApiService {
     }
   }
 }
+
+
+
+
 
 
 

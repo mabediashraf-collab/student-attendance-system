@@ -278,8 +278,9 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
   }
 
   Widget _buildProfileTab() {
-    if (teacherData == null)
+    if (teacherData == null) {
       return const Center(child: Text('No profile data found'));
+    }
 
     String fullName = teacherData!['full_name'] ?? teacherName;
     String firstLetter = fullName.isNotEmpty ? fullName[0].toUpperCase() : '?';
@@ -405,3 +406,4 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
     );
   }
 }
+
